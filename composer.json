@@ -1,0 +1,33 @@
+{
+    "name": "pokeface/laravels_chat",
+    "description": "chat base on laravels",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "pokeface",
+            "email": "ye3245@sina.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Pokeface\\Chating\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Pokeface\\Chating\\Providers\\ChatServiceProvider"
+            ],
+            "aliases": {
+                "Pochat": "Pokeface\\Chating\\Facades\\Pochat",
+                "ChatRoute": "Pokeface\\Chating\\Facades\\ChatRoute"
+            }
+        }
+    },
+    "require": {
+        "hhxsv5/laravel-s": "^3.0"
+    },
+    "files": [
+      "routes/websocket.php"
+    ]
+}

@@ -1,0 +1,60 @@
+<?php
+
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
+
+class CreatePochatTables extends Migration
+{
+    /**
+     * Run the migrations.
+     *
+     * @return void
+     */
+    public function up()
+    {
+        $tableNames = config('pochat.table_names');
+        Schema::create($tableNames['chat_group'], function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('name');
+            $table->timestamps();
+        });
+
+        Schema::create($tableNames['chat_record'], function (Blueprint $table)use($tableNames) {
+            $table->increments('id');
+            $table->Integer('from')->comment('发送者');
+            $table->Integer('to')->comment('接收者');
+            $table->string('message')->comment('消息');
+            $table->string('type')->comment('消息类型');
+            $table->string('species')->comment('信息类型：private：私聊，group：群聊');
+            $table->unsignedInteger('group_id');
+            $table->Integer('is_send')->default(0)->comment('是否已发送');
+            $table->timestamps();
+    
+        });
+
+        
+
+        Schema::create($tableNames['chat_group_member'], function (Blueprint $table) use($tableNames) {
+            $table->unsignedInteger('group_id',10);
+            $table->string('user_id');
+            $table->timestamps();
+ 
+        });
+
+    }
+
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down()
+    {
+        $tableNames = config('pochat.table_names');
+
+        Schema::drop($tableNames['chat_record']);
+        Schema::drop($tableNames['chat_group']);
+        Schema::drop($tableNames['chat_group_member']);
+    }
+}
