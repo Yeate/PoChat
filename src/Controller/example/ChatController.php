@@ -12,7 +12,7 @@ class ChatController extends BaseController
 
     public function privateChat(){
         $data = $this->getData();
-        PoChatChat::Chat($this->getFd(), $data,'private');
+        PoChatChat::Chat($data,'private');
     }
 
     public function groupChat(){

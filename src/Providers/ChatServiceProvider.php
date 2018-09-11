@@ -46,7 +46,7 @@ class ChatServiceProvider extends ServiceProvider
         $this->app->bind('PoChatChat', function () {
             return new ChatService();
         });
-        $this->app->bind('PoChatUser', function () {
+        $this->app->singleton('PoChatUser', function () {
             return new UserService();
         });
         $this->app->booting(

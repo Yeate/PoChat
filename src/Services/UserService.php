@@ -8,9 +8,12 @@ use PoChatUser;
 
 class UserService
 {
+    protected $myFd;
+    protected $myUid;
 
-    public function getGroupId($myFd,$data,$species){
-        $fromUserId = PoChatUser::getUidByFd($myFd);
+    public function getGroupId($data,$species){
+        $fromUserId = PoChatUser::getMyUid();
+        \Log::info('uid:'.$fromUserId);
         if(empty($fromUserId)){
             throw new \Exception("您未登陆",1001);
         }
@@ -42,29 +45,14 @@ class UserService
         }
         return $ufd;
     }
-    // /**
-    //  * [getGroupId description]
-    //  * @param  [type] $from    [发信人user_id]
-    //  * @param  [type] $to      [收信人user_id]
-    //  * @param  [type] $species [类别 private：私聊]
-    //  * @return [type]          [description]
-    //  */
-    // public function getGroupId($from,$to,$species){
-    //     $uids = [$from];
-    //     if(is_array($to)){
-    //         $uids = array_merge($uids,$to);
-    //     }else{
-    //         $uids[]=$to;
-    //     }
-    //     $data = ['uids'=>$uids,'species'=>$species];
-    //     $group_id=ChatGroup::create($data);
-    //     return $group_id;
-
-    // }
+    
 
     public function login($uid,$fd){
+        $this->setMyFd($fd);
+        $this->setMyUid($uid);
         //用户 fd 双向绑定
         if(!empty($uid)){
+
             app('swoole')->wsTable->set('uid:' . $uid, ['value' => $fd]);// 绑定uid到fd的映射
             app('swoole')->wsTable->set('fd:' . $fd, ['value' => $uid]);// 绑定fd到uid的映射
             return true;
@@ -81,6 +69,8 @@ class UserService
             app('swoole')->wsTable->del('uid:' . $uid['value']);// 解绑uid映射
         }
         app('swoole')->wsTable->del('fd:' . $fd);// 解绑fd映射
+        $this->setMyFd(null);
+        $this->setMyUid(null);
     }
 
     public function getFdByUid($uid){
@@ -111,6 +101,30 @@ class UserService
         }else{
             throw new \Exception("fd 错误");
             
+        }
+    }
+
+
+
+    public function setMyFd($fd){
+        $this->myFd=$fd;
+    }
+    public function getMyFd(){
+        if(!empty($this->myFd)){
+            return $this->myFd;
+        }else{
+            throw new \Exception("FD 缺失", 1002);
+        }
+    }
+
+    public function setMyUid($uid){
+        $this->myUid=$uid;
+    }
+    public function getMyUid(){
+        if(!empty($this->myUid)){
+            return $this->myUid;
+        }else{
+            throw new \Exception("用户未登录", 1001);
         }
     }
 

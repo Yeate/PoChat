@@ -11,52 +11,21 @@ use PoChatUser;
 
 class ChatService
 {
+    protected $response;
     /**
      * [聊天]
      * @param [type] $myFd    [本人Fd]
      * @param [type] $data    [{"url":"chat/private","data":{"uid":331,"group_id":0,"type":"text","message":"我只是测试一下"}}]
      * @param [type] $species [类型]
      */
-    public function Chat($myFd,$data,$species){
-        $fromUid = PoChatUser::getUidByFd($myFd);
-        list($data['group_id'],$ufds) = PoChatUser::getGroupId($myFd,$data,$species);
+    public function Chat($data,$species){
+        \Log::info('fd:'.PoChatUser::getMyFd());
+        list($data['group_id'],$ufds) = PoChatUser::getGroupId($data,$species);
         foreach($ufds as $_uf){
-            $response = PoChatChat::formatResponse($myFd,$_uf['fd'],$data,$species);
-            $this->push($_uf,$response,$fromUid);
+            $response = $this->formatResponse($_uf['uid'],$data,$species)->push($_uf);
         }
-    }
-    /**
-     * [formatResponse description]
-     * @param  [type] $fromFd  [发送人]
-     * @param  [type] $toFd    [接收人]
-     * @param  [type] $data    [消息数据]
-     * @param  [type] $species [消息类型 private：私聊]
-     * @return [type]          [description]
-     */
-    public function formatResponse($fromFd,$toFd,$data,$species){
-        $response = ['from'=>$fromFd,'to'=>$toFd];
-        switch ($data['type']){
-            case 'text':
-                $response['type']='text';
-                $response['message']=$data['message'];
-                $response['created_at']=isset($data['created_at'])?$data['created_at']:Carbon::now()->toDateTimeString();
-                $response['species']=$species;
-                $response['group_id']=$data['group_id'];
-                break;
-        }
-        return $response;
-
     }
 
-    public function push($uf,$response,$fromUid){
-        try {
-            $pushStatus=ChatRoute::server()->push($uf['fd'],json_encode(['success'=>true,'response'=>$response]));
-            $this->_createChatRecord($response,$uf['uid'],$fromUid,1);
-        } catch (\Exception $e) {
-            $this->_createChatRecord($response,$uf['uid'],$fromUid,0);
-            return false;
-        }
-    }
 
     public function singlePush($fd,$response){
         try {
@@ -68,14 +37,50 @@ class ChatService
         }
     }
 
-    private function _createChatRecord($response,$toUid,$fromUid,$is_send){
+
+    /**
+     * [formatResponse description]
+     * @param  [type] $toUid    [接收人]
+     * @param  [type] $data    [消息数据]
+     * @param  [type] $species [消息类型 private：私聊]
+     * @return [type]          [description]
+     */
+    private function formatResponse($toUid,$data,$species){
+        $response = ['from'=>PoChatUser::getMyUid(),'to'=>$toUid];
+        switch ($data['type']){
+            case 'text':
+                $response['type']='text';
+                $response['message']=$data['message'];
+                $response['created_at']=isset($data['created_at'])?$data['created_at']:Carbon::now()->toDateTimeString();
+                $response['species']=$species;
+                $response['group_id']=$data['group_id'];
+                break;
+        }
+        $this->response=$response;
+        return $this;
+
+    }
+
+    private function push($uf){
+        try {
+            $pushStatus=ChatRoute::server()->push($uf['fd'],json_encode(['success'=>true,'response'=>$this->response]));
+            $this->_createChatRecord($uf['uid'],1);
+        } catch (\Exception $e) {
+            $this->_createChatRecord($uf['uid'],0);
+            return false;
+        }
+    }
+
+
+
+    private function _createChatRecord($toUid,$is_send){
         $chatRecord = app(ChatRecord::class);
-        $chatRecord -> from = $fromUid;
+        $chatRecord -> from = PoChatUser::getMyUid();
         $chatRecord -> to = $toUid;
-        $chatRecord -> type = $response['type'];
-        $chatRecord -> message = $response['message'];
-        $chatRecord -> species = $response['species'];
-        $chatRecord -> group_id = $response['group_id'];
+        $chatRecord -> type = $this->response['type'];
+        $chatRecord -> message = $this->response['message'];
+        $chatRecord -> species = $this->response['species'];
+        $chatRecord -> group_id = $this->response['group_id'];
         $chatRecord -> is_send = $is_send;
         $chatRecord -> save();
     }
