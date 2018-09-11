@@ -36,7 +36,7 @@ class CreatePochatTables extends Migration
         
 
         Schema::create($tableNames['chat_group_member'], function (Blueprint $table) use($tableNames) {
-            $table->unsignedInteger('group_id',10);
+            $table->unsignedInteger('group_id');
             $table->string('user_id');
             $table->timestamps();
  
