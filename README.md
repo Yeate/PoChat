@@ -2,7 +2,8 @@
 base on laravels
 准备:
   编辑laravels.php配置文件
-  1.修改    
+  1.修改   
+  
     'websocket'          => [
         'enable' => true,
         'handler' => \App\Services\WebSocketService::class,
@@ -16,6 +17,11 @@ base on laravels
             ],
         ],
     ],
+    
+    'register_providers' => [
+        \Pokeface\Chating\Providers\ChatServiceProvider::class,
+    ],
+    
     
     swoole.dispatch_mode   => 2
   2.执行
