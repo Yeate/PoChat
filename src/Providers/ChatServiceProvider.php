@@ -4,9 +4,11 @@ namespace Pokeface\Chating\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Pokeface\Chating\Facades\ChatServiceFacade;
+use Pokeface\Chating\Facades\RecordServiceFacade;
 use Pokeface\Chating\Facades\UserServiceFacade;
 use Pokeface\Chating\Modules\ChatRoute;
 use Pokeface\Chating\Services\ChatService;
+use Pokeface\Chating\Services\RecordService;
 use Pokeface\Chating\Services\UserService;
 
 class ChatServiceProvider extends ServiceProvider
@@ -43,11 +45,14 @@ class ChatServiceProvider extends ServiceProvider
         $this->app->singleton('ChatRoute', function () {
             return new ChatRoute();
         });
-        $this->app->bind('PoChatChat', function () {
+        $this->app->singleton('PoChatChat', function () {
             return new ChatService();
         });
         $this->app->singleton('PoChatUser', function () {
             return new UserService();
+        });
+        $this->app->singleton('PoChatRecord', function () {
+            return new RecordService();
         });
         $this->app->booting(
             function () {
@@ -63,6 +68,10 @@ class ChatServiceProvider extends ServiceProvider
                 if(empty($aliases['PoChatUser'])){
                     $loader = \Illuminate\Foundation\AliasLoader::getInstance();
                     $loader->alias('PoChatUser','Pokeface\Chating\Facades\UserServiceFacade');
+                }
+                if(empty($aliases['PoChatRecord'])){
+                    $loader = \Illuminate\Foundation\AliasLoader::getInstance();
+                    $loader->alias('PoChatRecord','Pokeface\Chating\Facades\RecordServiceFacade');
                 }
             }
         );
